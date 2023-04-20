@@ -23,7 +23,7 @@ if not model_path:
     raise ValueError(f"Invalid model type: {args.model_type}")
 # Load the pipeline when the app starts
 instruct_pipeline = pipeline(
-    model=args.model_type,
+    model=model_path,
     torch_dtype=torch.bfloat16,
     trust_remote_code=True,
     device_map="auto"
