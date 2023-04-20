@@ -1,7 +1,4 @@
 import argparse
-import os
-import subprocess
-import sys
 from flask import Flask, request, jsonify
 import torch
 from transformers import pipeline
@@ -42,14 +39,5 @@ def inference():
     else:
         return jsonify({"error": "No prompt provided"}), 400
 
-def run_app():
-    app.run(host='0.0.0.0', port=5000)
-
 if __name__ == '__main__':
-    flask_process = subprocess.Popen(
-        [sys.executable, "-u", "-m", "flask", "run", "--host", "0.0.0.0", "--port", "5000"],
-        cwd=os.path.dirname(os.path.abspath(__file__)),
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
-    )
-    print(f"Flask app started with process ID {flask_process.pid}")
+    app.run(host='0.0.0.0', port=5000)
