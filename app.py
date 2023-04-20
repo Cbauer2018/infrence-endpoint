@@ -1,7 +1,7 @@
 import argparse
-import threading
-import signal
 import os
+import subprocess
+import sys
 from flask import Flask, request, jsonify
 import torch
 from transformers import pipeline
@@ -42,20 +42,14 @@ def inference():
     else:
         return jsonify({"error": "No prompt provided"}), 400
 
-# Define a function to start the Flask app
-def start_flask_app():
+def run_app():
     app.run(host='0.0.0.0', port=5000)
 
-# Define a signal handler to put the main thread into the background
-def sig_handler(signum, frame):
-    os.setsid()
-
-# Register the signal handler
-signal.signal(signal.SIGUSR1, sig_handler)
-
-# Start the Flask app in a separate thread
-flask_thread = threading.Thread(target=start_flask_app)
-flask_thread.start()
-
-# Send the signal to put the main thread into the background
-os.kill(os.getpid(), signal.SIGUSR1)
+if __name__ == '__main__':
+    flask_process = subprocess.Popen(
+        [sys.executable, "-u", "-m", "flask", "run", "--host", "0.0.0.0", "--port", "5000"],
+        cwd=os.path.dirname(os.path.abspath(__file__)),
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
+    print(f"Flask app started with process ID {flask_process.pid}")
