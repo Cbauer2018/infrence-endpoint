@@ -7,19 +7,15 @@ app = Flask(__name__)
 
 # Parse command-line arguments
 parser = argparse.ArgumentParser(description='Start the Flask app with the specified model type.')
-parser.add_argument('model_type', help='Model type to use')
+parser.add_argument('model_path', help='Path to model on HuggingFace')
 args = parser.parse_args()
 
-# Model type to model path in huggingface mapping
-MODEL_PATHS = {
-    "Dolly V2 7B": "databricks/dolly-v2-7b",
-    "StableLM 7B": "stabilityai/stablelm-tuned-alpha-7b",
-}
 
 # Get the model path based on the model type
-model_path = MODEL_PATHS.get(args.model_type)
+model_path = args.model_path
+
 if not model_path:
-    raise ValueError(f"Invalid model type: {args.model_type}")
+    raise ValueError(f"Invalid model path: {args.model_path}")
 
 # Load the pipeline when the app starts
 instruct_pipeline = pipeline(
