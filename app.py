@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 import torch
 from transformers import pipeline
 import argparse
-
+import threading
 
 app = Flask(__name__)
 
@@ -18,6 +18,16 @@ if not model_path:
 global model_loaded,instruct_pipeline
 model_loaded = False
 instruct_pipeline = None
+
+def load_pipeline():
+    global model_loaded, instruct_pipeline
+    instruct_pipeline = pipeline(
+        model=model_path,
+        torch_dtype=torch.bfloat16,
+        trust_remote_code=True,
+        device_map="auto"
+    )
+    model_loaded = True
 
 @app.route('/status', methods=['GET'])
 def status():
@@ -41,14 +51,8 @@ def inference():
         return jsonify({"error": "No prompt provided"}), 400
 
 if __name__ == '__main__':
+    load_thread = threading.Thread(target=load_pipeline)
+    load_thread.start()
     app.run(host='0.0.0.0', port=5000)
-
-    instruct_pipeline = pipeline(
-    model=model_path,
-    torch_dtype=torch.bfloat16,
-    trust_remote_code=True,
-    device_map="auto"
-    )
-    model_loaded = True
 
 
