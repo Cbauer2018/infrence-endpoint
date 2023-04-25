@@ -1,31 +1,37 @@
 from flask import Flask, request, jsonify
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from transformers import pipeline
 import argparse
-import os
-import subprocess
+
 
 app = Flask(__name__)
 
-model_path = os.environ.get('MODEL_PATH')
+parser = argparse.ArgumentParser(description='Start the Flask app with the specified model type.')
+parser.add_argument('model_path', help='Path to model on HuggingFace')
+args = parser.parse_args()
+
+model_path = args.model_path
 if not model_path:
-    raise ValueError("MODEL_PATH environment variable is not set")
+    raise ValueError(f"Invalid model path: {args.model_path}")
 
 
-# Load the pipeline
-instruct_pipeline = pipeline(
-    model=model_path,
-    torch_dtype=torch.bfloat16,
-    trust_remote_code=True,
-    device_map="auto"
-)
+global model_loaded,instruct_pipeline
+model_loaded = False
+instruct_pipeline = None
 
 @app.route('/status', methods=['GET'])
 def status():
-    return jsonify({"status": "Model is loaded and API is running."})
+    if model_loaded:
+        return jsonify({"status": "Model is loaded and API is running."})
+    else:
+        return jsonify({"status": "Model is not loaded yet."})
 
 @app.route('/', methods=['POST'])
 def inference():
+
+    if not model_loaded:
+        return jsonify({"error": "Model is not loaded yet."}), 400
+    
     prompt = request.json.get('prompt')
 
     if prompt:
@@ -36,5 +42,13 @@ def inference():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+
+    instruct_pipeline = pipeline(
+    model=model_path,
+    torch_dtype=torch.bfloat16,
+    trust_remote_code=True,
+    device_map="auto"
+    )
+    model_loaded = True
 
 
