@@ -1,12 +1,13 @@
-import argparse
+import pickle
 from flask import Flask, request, jsonify
 import torch
 from transformers import pipeline
 
 app = Flask(__name__)
 
-# Global variable to hold the pipeline object
-instruct_pipeline = None
+# Load the pipeline from the file
+with open("pipeline.pkl", "rb") as f:
+    instruct_pipeline = pickle.load(f)
 
 @app.route('/', methods=['POST'])
 def inference():
@@ -18,7 +19,5 @@ def inference():
     else:
         return jsonify({"error": "No prompt provided"}), 400
 
-def start_app(pipeline_object):
-    global instruct_pipeline
-    instruct_pipeline = pipeline_object
+if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

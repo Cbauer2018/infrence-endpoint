@@ -1,5 +1,6 @@
 import argparse
 import os
+import pickle
 import subprocess
 from transformers import pipeline
 import torch
@@ -20,12 +21,14 @@ instruct_pipeline = pipeline(
     device_map="auto"
 )
 
+# Save the pipeline object to a file
+with open("pipeline.pkl", "wb") as f:
+    pickle.dump(instruct_pipeline, f)
+
 # Start the Flask app with nohup
 subprocess.Popen(
     ["nohup", "python3", "app.py"],
-    env=dict(os.environ, INSTRUCT_PIPELINE=instruct_pipeline),
     stdout=open("log.txt", "w"),
     stderr=subprocess.STDOUT,
     preexec_fn=os.setpgrp
 )
-    
