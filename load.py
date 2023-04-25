@@ -1,6 +1,5 @@
 import argparse
 import os
-import pickle
 import subprocess
 from transformers import pipeline
 import torch
@@ -21,9 +20,8 @@ instruct_pipeline = pipeline(
     device_map="auto"
 )
 
-# Save the pipeline object to a file
-with open("pipeline.pkl", "wb") as f:
-    pickle.dump(instruct_pipeline, f)
+# Save the pipeline model to a file
+instruct_pipeline.model.save_pretrained("saved_model")
 
 # Start the Flask app with nohup
 subprocess.Popen(

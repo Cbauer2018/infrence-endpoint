@@ -1,13 +1,21 @@
-import pickle
 from flask import Flask, request, jsonify
 import torch
-from transformers import pipeline
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 app = Flask(__name__)
 
-# Load the pipeline from the file
-with open("pipeline.pkl", "rb") as f:
-    instruct_pipeline = pickle.load(f)
+# Load the pipeline model from the file
+model = AutoModelForCausalLM.from_pretrained("saved_model")
+tokenizer = AutoTokenizer.from_pretrained("saved_model")
+
+instruct_pipeline = pipeline(
+    "text-generation",
+    model=model,
+    tokenizer=tokenizer,
+    torch_dtype=torch.bfloat16,
+    trust_remote_code=True,
+    device_map="auto"
+)
 
 @app.route('/', methods=['POST'])
 def inference():
