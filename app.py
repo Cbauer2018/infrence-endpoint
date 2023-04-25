@@ -4,7 +4,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 import argparse
 import os
 import subprocess
-from multiprocessing import Process, Value
+from multiprocessing import Process, Value, Manager
 
 app = Flask(__name__)
 
@@ -16,18 +16,21 @@ model_path = args.model_path
 if not model_path:
     raise ValueError(f"Invalid model path: {args.model_path}")
 
-# Global variable to store the model loading status
+# Global variables to store the model loading status and the pipeline
 model_loaded = Value('b', False)
+manager = Manager()
+instruct_pipeline = manager.Namespace()
 
 def load_model():
     global model_loaded, instruct_pipeline
     # Load the pipeline
-    instruct_pipeline = pipeline(
+    pipeline_instance = pipeline(
         model=model_path,
         torch_dtype=torch.bfloat16,
         trust_remote_code=True,
         device_map="auto"
     )
+    instruct_pipeline.pipeline = pipeline_instance
     with model_loaded.get_lock():
         model_loaded.value = True
 
@@ -46,7 +49,7 @@ def inference():
     prompt = request.json.get('prompt')
 
     if prompt:
-        result = instruct_pipeline(prompt)
+        result = instruct_pipeline.pipeline(prompt)
         return jsonify({"result": result})
     else:
         return jsonify({"error": "No prompt provided"}), 400
