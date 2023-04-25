@@ -7,13 +7,10 @@ import subprocess
 
 app = Flask(__name__)
 
-parser = argparse.ArgumentParser(description='Start the Flask app with the specified model type.')
-parser.add_argument('model_path', help='Path to model on HuggingFace')
-args = parser.parse_args()
-
-model_path = args.model_path
+model_path = os.environ.get('MODEL_PATH')
 if not model_path:
-    raise ValueError(f"Invalid model path: {args.model_path}")
+    raise ValueError("MODEL_PATH environment variable is not set")
+
 
 # Load the pipeline
 instruct_pipeline = pipeline(
