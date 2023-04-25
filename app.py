@@ -31,10 +31,7 @@ def load_pipeline():
 
 @app.route('/status', methods=['GET'])
 def status():
-    if model_loaded:
-        return jsonify({"status": "Model is loaded and API is running."})
-    else:
-        return jsonify({"status": "Model is not loaded yet."})
+    return jsonify({"model_loaded": model_loaded})
 
 @app.route('/', methods=['POST'])
 def inference():
