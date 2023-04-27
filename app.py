@@ -4,6 +4,7 @@ from transformers import pipeline
 from diffusers import StableDiffusionPipeline
 import argparse
 import threading
+import io
 
 app = Flask(__name__)
 
@@ -55,7 +56,10 @@ def inference():
         
         if pipeline_type == "text-to-image":
             result = hf_pipeline(prompt).images[0]
-            return Response(result, content_type='image/jpeg')
+            img_io = io.BytesIO()
+            result.save(img_io, 'JPEG')
+            img_io.seek(0)
+            return Response(img_io.getvalue(), content_type='image/jpeg')
         else:
             result = hf_pipeline(prompt)
             return jsonify({"result": result})
