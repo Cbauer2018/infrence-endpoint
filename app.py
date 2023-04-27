@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 import torch
 from transformers import pipeline
 from diffusers import StableDiffusionPipeline
@@ -50,9 +50,13 @@ def inference():
     
     prompt = request.json.get('prompt')
 
+
     if prompt:
         result = hf_pipeline(prompt)
-        return jsonify({"result": result})
+        if pipeline_type == "text-to-image":
+            return Response(result, content_type='image/jpeg')
+        else:
+            return jsonify({"result": result})
     else:
         return jsonify({"error": "No prompt provided"}), 400
 
