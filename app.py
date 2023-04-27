@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import torch
 from transformers import pipeline
+from diffusers import StableDiffusionPipeline
 import argparse
 import threading
 
@@ -8,25 +9,33 @@ app = Flask(__name__)
 
 parser = argparse.ArgumentParser(description='Start the Flask app with the specified model type.')
 parser.add_argument('model_path', help='Path to model on HuggingFace')
+parser.add_argument('pipeline_type', help='Pipeline type to use')
 args = parser.parse_args()
 
 model_path = args.model_path
+pipeline_type = args.pipeline_type
 if not model_path:
     raise ValueError(f"Invalid model path: {args.model_path}")
 
 
-global model_loaded,instruct_pipeline
+global model_loaded,hf_pipeline
 model_loaded = False
-instruct_pipeline = None
+hf_pipeline = None
 
 def load_pipeline():
-    global model_loaded, instruct_pipeline
-    instruct_pipeline = pipeline(
-        model=model_path,
-        torch_dtype=torch.bfloat16,
-        trust_remote_code=True,
-        device_map="auto"
-    )
+    global model_loaded, hf_pipeline
+    if pipeline_type == "text-generation":
+
+        hf_pipeline = pipeline(
+            model=model_path,
+            torch_dtype=torch.bfloat16,
+            trust_remote_code=True,
+            device_map="auto"
+        )
+    elif pipeline_type == "text-to-image":
+        hf_pipeline= StableDiffusionPipeline.from_pretrained(model_path, torch_dtype=torch.float16)
+        hf_pipeline = hf_pipeline.to("cuda")
+
     model_loaded = True
 
 @app.route('/status', methods=['GET'])
@@ -42,7 +51,7 @@ def inference():
     prompt = request.json.get('prompt')
 
     if prompt:
-        result = instruct_pipeline(prompt)
+        result = hf_pipeline(prompt)
         return jsonify({"result": result})
     else:
         return jsonify({"error": "No prompt provided"}), 400
