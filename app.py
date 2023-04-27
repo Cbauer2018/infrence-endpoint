@@ -54,7 +54,8 @@ def inference():
     if prompt:
         result = hf_pipeline(prompt)
         if pipeline_type == "text-to-image":
-            return Response(result, content_type='image/jpeg')
+            image = result.images[0]
+            return Response(image, content_type='image/jpeg')
         else:
             return jsonify({"result": result})
     else:
