@@ -52,11 +52,12 @@ def inference():
 
 
     if prompt:
-        result = hf_pipeline(prompt)
+        
         if pipeline_type == "text-to-image":
-            image = result.images[0]
-            return Response(image, content_type='image/jpeg')
+            result = hf_pipeline(prompt).images[0]
+            return Response(result, content_type='image/jpeg')
         else:
+            result = hf_pipeline(prompt)
             return jsonify({"result": result})
     else:
         return jsonify({"error": "No prompt provided"}), 400
