@@ -19,29 +19,34 @@ if not model_path:
     raise ValueError(f"Invalid model path: {args.model_path}")
 
 
-global model_loaded,hf_pipeline
+global model_loaded,hf_pipeline, error_loading
 model_loaded = False
 hf_pipeline = None
+error_loading = False
 
 def load_pipeline():
-    global model_loaded, hf_pipeline
-    if pipeline_type == "text-generation":
+    global model_loaded, hf_pipeline, error_loading
+    try:
+        if pipeline_type == "text-generation":
 
-        hf_pipeline = pipeline(
-            model=model_path,
-            torch_dtype=torch.bfloat16,
-            trust_remote_code=True,
-            device_map="auto"
-        )
-    elif pipeline_type == "text-to-image":
-        hf_pipeline= StableDiffusionPipeline.from_pretrained(model_path, torch_dtype=torch.float16)
-        hf_pipeline = hf_pipeline.to("cuda")
+            hf_pipeline = pipeline(
+                model=model_path,
+                torch_dtype=torch.bfloat16,
+                trust_remote_code=True,
+                device_map="auto"
+            )
+        elif pipeline_type == "text-to-image":
+            hf_pipeline= StableDiffusionPipeline.from_pretrained(model_path, torch_dtype=torch.float16)
+            hf_pipeline = hf_pipeline.to("cuda")
 
-    model_loaded = True
+        model_loaded = True
+    except Exception as e:
+        error_loading = True
+        model_loaded = False
 
 @app.route('/status', methods=['GET'])
 def status():
-    return jsonify({"model_loaded": model_loaded})
+    return jsonify({"model_loaded": model_loaded, "error": error_loading})
 
 @app.route('/', methods=['POST'])
 def inference():
